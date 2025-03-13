@@ -52,6 +52,7 @@ class TransactionInput:
             font=("Inter", 11)
         ).grid(row=1, column=0, sticky="w", padx=(0, 10), pady=10)
         
+        # Use tk.Entry with explicit styling
         self.amount_entry = tk.Entry(
             self.input_frame,
             font=("Inter", 11),
@@ -63,10 +64,9 @@ class TransactionInput:
             bd=1,
             highlightthickness=1,
             highlightcolor="#4F46E5",
-            highlightbackground="#374151",
-            width=15
+            highlightbackground="#374151"
         )
-        self.amount_entry.grid(row=1, column=1, sticky="w", pady=10)
+        self.amount_entry.grid(row=1, column=1, sticky="ew", pady=10)
         
         # Transaction type - Row 1, Column 2-3
         ttk.Label(
@@ -76,36 +76,31 @@ class TransactionInput:
             font=("Inter", 11)
         ).grid(row=1, column=2, sticky="w", padx=(20, 10), pady=10)
         
-        # Use tk.OptionMenu with explicit styling
-        self.type_var = tk.StringVar(value="Income")
-        type_options = ["Income", "Expense"]
-        
-        self.type_menu = tk.OptionMenu(
-            self.input_frame,
-            self.type_var,
-            *type_options
+        # Create a custom style for the combobox
+        style = ttk.Style()
+        style.configure(
+            "Custom.TCombobox",
+            fieldbackground="#1E293B",
+            background="#1E293B",
+            foreground="#F9FAFB",
+            arrowcolor="#F9FAFB",
+            bordercolor="#374151",
+            lightcolor="#1E293B",
+            darkcolor="#1E293B"
         )
-        self.type_menu.configure(
+        
+        # Transaction type dropdown
+        self.transaction_type = tk.StringVar(value="Income")
+        self.type_combo = ttk.Combobox(
+            self.input_frame,
+            textvariable=self.transaction_type,
+            values=["Income", "Expense"],
+            state="readonly",
+            style="Custom.TCombobox",
             font=("Inter", 11),
-            bg="#1E293B",
-            fg="#F9FAFB",
-            activebackground="#2D3748",
-            activeforeground="#F9FAFB",
-            highlightthickness=0,
-            bd=1,
-            relief="solid",
-            padx=10,
             width=10
         )
-        # Configure the dropdown menu style
-        self.type_menu["menu"].configure(
-            font=("Inter", 11),
-            bg="#1E293B",
-            fg="#F9FAFB",
-            activebackground="#4F46E5",
-            activeforeground="#F9FAFB"
-        )
-        self.type_menu.grid(row=1, column=3, sticky="w", pady=10)
+        self.type_combo.grid(row=1, column=3, sticky="ew", pady=10)
         
         # Add button - Row 2
         self.add_button = tk.Button(
@@ -113,104 +108,91 @@ class TransactionInput:
             text="Add Transaction",
             font=("Inter", 11, "bold"),
             bg="#4F46E5",
-            fg="#F9FAFB",
+            fg="#FFFFFF",
             activebackground="#3730A3",
-            activeforeground="#F9FAFB",
+            activeforeground="#FFFFFF",
             relief="flat",
             padx=15,
             pady=8,
             cursor="hand2",
-            bd=0
+            command=self.add_transaction
         )
-        self.add_button.grid(row=2, column=0, columnspan=4, pady=(15, 5))
-        self.add_button.configure(command=self.add_transaction)
+        self.add_button.grid(row=2, column=0, columnspan=4, sticky="e", pady=(10, 0))
         
-        # Add hover effect to button
-        self.add_button.bind("<Enter>", self.on_button_hover)
-        self.add_button.bind("<Leave>", self.on_button_leave)
-        
-        # Bind focus events to change background color
+        # Bind events for visual feedback
         self.description_entry.bind("<FocusIn>", self.on_entry_focus_in)
         self.description_entry.bind("<FocusOut>", self.on_entry_focus_out)
         self.amount_entry.bind("<FocusIn>", self.on_entry_focus_in)
         self.amount_entry.bind("<FocusOut>", self.on_entry_focus_out)
+        self.add_button.bind("<Enter>", self.on_button_hover)
+        self.add_button.bind("<Leave>", self.on_button_leave)
     
     def on_entry_focus_in(self, event):
-        """Handle entry focus in"""
-        event.widget.configure(
-            bg="#2D3748",
-            highlightcolor="#4F46E5",
-            highlightthickness=2
-        )
+        """Handle entry focus in event"""
+        widget = event.widget
+        widget.config(highlightcolor="#6366F1", highlightthickness=2)
     
     def on_entry_focus_out(self, event):
-        """Handle entry focus out"""
-        event.widget.configure(
-            bg="#1E293B",
-            highlightthickness=1,
-            highlightbackground="#374151"
-        )
+        """Handle entry focus out event"""
+        widget = event.widget
+        widget.config(highlightcolor="#4F46E5", highlightthickness=1)
     
     def on_button_hover(self, event):
-        """Handle button hover"""
-        self.add_button.configure(bg="#3730A3")
+        """Handle button hover event"""
+        self.add_button.config(bg="#3730A3")
     
     def on_button_leave(self, event):
-        """Handle button leave"""
-        self.add_button.configure(bg="#4F46E5")
+        """Handle button leave event"""
+        self.add_button.config(bg="#4F46E5")
     
     def add_transaction(self):
         """Add a new transaction"""
-        try:
-            description = self.description_entry.get().strip()
-            amount_text = self.amount_entry.get().strip()
-            
-            if not description:
-                messagebox.showerror("Error", "Please enter a description")
-                self.description_entry.focus_set()
-                return
-                
-            if not amount_text:
-                messagebox.showerror("Error", "Please enter an amount")
-                self.amount_entry.focus_set()
-                return
-            
-            try:
-                amount = float(amount_text)
-                if amount <= 0:
-                    messagebox.showerror("Error", "Amount must be greater than zero")
-                    self.amount_entry.focus_set()
-                    return
-            except ValueError:
-                messagebox.showerror("Error", "Please enter a valid number for amount")
-                self.amount_entry.focus_set()
-                return
-            
-            transaction_type = self.type_var.get()
-            
-            # Create transaction
-            transaction = {
-                'date': datetime.now(),
-                'description': description,
-                'type': transaction_type,
-                'amount': amount
-            }
-            
-            # Call the callback
-            self.on_transaction_added(transaction)
-            
-            # Clear inputs
-            self.description_entry.delete(0, "end")
-            self.amount_entry.delete(0, "end")
-            self.type_var.set("Income")
+        # Get input values
+        description = self.description_entry.get().strip()
+        amount_str = self.amount_entry.get().strip()
+        transaction_type = self.transaction_type.get()
+        
+        # Validate inputs
+        if not description:
+            messagebox.showerror("Input Error", "Please enter a description.")
             self.description_entry.focus_set()
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {str(e)}")
+            return
+        
+        try:
+            amount = float(amount_str)
+            if amount <= 0:
+                messagebox.showerror("Input Error", "Amount must be greater than zero.")
+                self.amount_entry.focus_set()
+                return
+        except ValueError:
+            messagebox.showerror("Input Error", "Please enter a valid amount.")
+            self.amount_entry.focus_set()
+            return
+        
+        # Create transaction object
+        transaction = {
+            'date': datetime.now(),
+            'description': description,
+            'amount': amount,
+            'type': transaction_type
+        }
+        
+        # Call the callback function
+        self.on_transaction_added(transaction)
+        
+        # Clear inputs
+        self.description_entry.delete(0, tk.END)
+        self.amount_entry.delete(0, tk.END)
+        self.transaction_type.set("Income")
+        
+        # Set focus back to description
+        self.description_entry.focus_set()
+
 
 class TransactionList:
     def __init__(self, parent):
         self.parent = parent
+        self.transactions = []  # Store transactions for save/load functionality
         self.setup_transaction_list()
     
     def setup_transaction_list(self):
@@ -251,44 +233,43 @@ class TransactionList:
         style.map(
             "TransactionTree.Treeview",
             background=[('selected', '#4F46E5')],
-            foreground=[('selected', '#F9FAFB')]
+            foreground=[('selected', '#FFFFFF')]
         )
         
-        # Configure heading hover effect
+        # Configure hover effect for headings
         style.map(
             "TransactionTree.Treeview.Heading",
-            background=[('active', '#4F46E5')],  # Brighter on hover
+            background=[('active', '#4F46E5')],
             foreground=[('active', '#FFFFFF')]
         )
         
-        # Create treeview for transactions with custom style
-        columns = ("Date", "Description", "Type", "Amount")
+        # Create the treeview with custom style
         self.tree = ttk.Treeview(
-            container, 
-            columns=columns, 
-            show="headings", 
-            style="TransactionTree.Treeview"
+            container,
+            columns=("date", "description", "type", "amount"),
+            show="headings",
+            style="TransactionTree.Treeview",
+            height=10
         )
         
-        # Configure column headings with explicit styling
-        for col in columns:
-            self.tree.heading(
-                col, 
-                text=col,
-                anchor="w" if col != "Amount" else "e"
-            )
+        # Configure column headings
+        self.tree.heading("date", text="Date")
+        self.tree.heading("description", text="Description")
+        self.tree.heading("type", text="Type")
+        self.tree.heading("amount", text="Amount")
         
         # Configure column widths and alignment
-        self.tree.column("Date", width=100, minwidth=100, anchor="w")
-        self.tree.column("Description", width=300, minwidth=200, anchor="w")
-        self.tree.column("Type", width=100, minwidth=100, anchor="w")
-        self.tree.column("Amount", width=100, minwidth=100, anchor="e")
+        self.tree.column("date", width=120, anchor="w")
+        self.tree.column("description", width=300, anchor="w")
+        self.tree.column("type", width=100, anchor="center")
+        self.tree.column("amount", width=100, anchor="e")
         
-        # Add scrollbar with custom styling
+        # Create a scrollbar
         scrollbar = ttk.Scrollbar(
             container, 
             orient="vertical", 
-            command=self.tree.yview
+            command=self.tree.yview,
+            style="Vertical.TScrollbar"
         )
         
         # Configure scrollbar style
@@ -296,55 +277,48 @@ class TransactionList:
             "Vertical.TScrollbar",
             background="#1F2937",
             troughcolor="#111827",
-            arrowcolor="#F9FAFB",
-            borderwidth=0
+            arrowcolor="#F9FAFB"
         )
         
+        # Configure the treeview to use the scrollbar
         self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # Pack layout for better control
+        # Pack the treeview and scrollbar
         self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Configure tag styles for income and expense
-        self.tree.tag_configure('income', foreground='#10B981')
-        self.tree.tag_configure('expense', foreground='#EF4444')
+        # Configure tags for different transaction types
+        self.tree.tag_configure('income', foreground="#10B981")  # Green for income
+        self.tree.tag_configure('expense', foreground="#EF4444")  # Red for expenses
         
-        # Add a placeholder message when empty
+        # Bind resize event to adjust column widths
+        self.tree.bind("<Configure>", self.on_list_resize)
+        
+        # Show placeholder if no transactions
         self.show_placeholder()
-        
-        # Configure resize event for the treeview
-        self.list_frame.bind('<Configure>', self.on_list_resize)
     
     def show_placeholder(self):
-        """Show a placeholder message when no transactions exist"""
-        # First clear any existing items
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-            
-        # Add placeholder item
-        self.tree.insert(
-            "", 
-            "end", 
-            values=("", "No transactions yet. Add a new transaction to get started.", "", ""),
-            tags=('placeholder',)
-        )
-        
-        # Style the placeholder text
-        self.tree.tag_configure('placeholder', foreground='#9CA3AF')
+        """Show placeholder message if no transactions"""
+        if len(self.tree.get_children()) == 0:
+            self.tree.insert(
+                "", 
+                "end", 
+                values=("", "No transactions yet. Add a new transaction to get started.", "", "")
+            )
     
     def on_list_resize(self, event):
-        """Handle list resize event"""
-        width = event.width - 30  # Account for scrollbar and padding
-        if width > 0:
-            # Distribute width proportionally
-            self.tree.column("Date", width=int(width * 0.15))
-            self.tree.column("Description", width=int(width * 0.55))
-            self.tree.column("Type", width=int(width * 0.15))
-            self.tree.column("Amount", width=int(width * 0.15))
+        """Adjust column widths when the list is resized"""
+        width = event.width
+        self.tree.column("date", width=int(width * 0.15))
+        self.tree.column("description", width=int(width * 0.45))
+        self.tree.column("type", width=int(width * 0.15))
+        self.tree.column("amount", width=int(width * 0.15))
     
-    def add_transaction(self, transaction):
+    def add_transaction(self, transaction, update_ui=True):
         """Add a transaction to the list"""
+        # Add to internal list for save/load functionality
+        self.transactions.append(transaction)
+        
         # Clear placeholder if this is the first transaction
         if len(self.tree.get_children()) == 1:
             item = self.tree.get_children()[0]
@@ -357,12 +331,19 @@ class TransactionList:
         # Determine tag based on transaction type
         tag = 'income' if transaction['type'] == 'Income' else 'expense'
         
+        # Format date for display
+        if isinstance(transaction['date'], datetime):
+            date_str = transaction['date'].strftime("%b %d, %Y")
+        else:
+            # If date is already a string (e.g., from loaded data)
+            date_str = transaction['date']
+        
         # Insert with appropriate tag
         item = self.tree.insert(
             "", 
             "end", 
             values=(
-                transaction['date'].strftime("%b %d, %Y"),
+                date_str,
                 transaction['description'],
                 transaction['type'],
                 amount_str
@@ -370,5 +351,22 @@ class TransactionList:
             tags=(tag,)
         )
         
-        # Scroll to show new transaction
-        self.tree.see(item) 
+        # Scroll to show new transaction if update_ui is True
+        if update_ui:
+            self.tree.see(item)
+    
+    def clear_transactions(self):
+        """Clear all transactions"""
+        # Clear internal list
+        self.transactions = []
+        
+        # Clear treeview
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        # Show placeholder
+        self.show_placeholder()
+    
+    def get_all_transactions(self):
+        """Get all transactions"""
+        return self.transactions

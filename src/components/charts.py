@@ -45,7 +45,7 @@ class FinancialCharts:
         self.charts_frame.bind('<Configure>', self.on_resize)
         
         # Initial empty charts
-        self.update_charts(0, 0, [])
+        self.update_charts([])
     
     def on_resize(self, event):
         """Handle resize event"""
@@ -54,8 +54,18 @@ class FinancialCharts:
             self.fig.set_size_inches(w/100, h/100)  # Adjusted for higher DPI
             self.canvas.draw()
     
-    def update_charts(self, total_income, total_expenses, transactions):
+    def update_charts(self, transactions):
         """Update the charts with current data"""
+        # Calculate totals from transactions
+        total_income = 0
+        total_expenses = 0
+        
+        for transaction in transactions:
+            if transaction['type'] == 'Income':
+                total_income += transaction['amount']
+            else:
+                total_expenses += transaction['amount']
+        
         # Clear previous charts
         self.pie_ax.clear()
         self.bar_ax.clear()
@@ -106,8 +116,26 @@ class FinancialCharts:
         recent_dates = []
         recent_amounts = []
         
-        for transaction in transactions[-5:]:
-            recent_dates.append(transaction['date'].strftime("%b %d"))  # Shorter date format
+        # Get the 5 most recent transactions
+        recent_transactions = transactions[-5:] if len(transactions) > 0 else []
+        
+        for transaction in recent_transactions:
+            # Handle both datetime objects and string dates
+            if hasattr(transaction['date'], 'strftime'):
+                date_str = transaction['date'].strftime("%b %d")
+            else:
+                # If date is already a string (e.g., from loaded data)
+                date_str = transaction['date']
+                if len(date_str) > 6:  # If it's a full date string, try to shorten it
+                    try:
+                        from datetime import datetime
+                        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                        date_str = date_obj.strftime("%b %d")
+                    except:
+                        # If parsing fails, just use the first 6 chars
+                        date_str = date_str[:6]
+            
+            recent_dates.append(date_str)
             amount = transaction['amount']
             if transaction['type'] == 'Expense':
                 amount = -amount

@@ -171,7 +171,7 @@ class PersonalFinanceTracker:
             self.transaction_list.clear_transactions()
             
             # Update charts
-            self.charts.update_charts([])
+            self.charts.update_charts(self.transactions)
             
             messagebox.showinfo("New Data", "All data has been cleared.")
     
@@ -287,11 +287,11 @@ class PersonalFinanceTracker:
                 for transaction in transactions:
                     self.transaction_list.add_transaction(transaction, update_ui=False)
                 
-                # Update charts
-                self.charts.update_charts(transactions)
-                
                 # Update transactions list
                 self.transactions = transactions
+                
+                # Update charts
+                self.charts.update_charts(self.transactions)
                 
                 messagebox.showinfo("Import Successful", 
                                    f"Successfully imported {len(transactions)} transactions.")
@@ -317,11 +317,11 @@ class PersonalFinanceTracker:
                 for transaction in transactions:
                     self.transaction_list.add_transaction(transaction, update_ui=False)
                 
-                # Update charts
-                self.charts.update_charts(transactions)
-                
                 # Update transactions list
                 self.transactions = transactions
+                
+                # Update charts
+                self.charts.update_charts(self.transactions)
                 
                 messagebox.showinfo("Import Successful", 
                                    f"Successfully imported {len(transactions)} transactions.")
@@ -580,8 +580,8 @@ class PersonalFinanceTracker:
         # Update transaction list
         self.transaction_list.add_transaction(transaction)
         
-        # Update charts
-        self.charts.update_charts(self.transaction_list.get_all_transactions())
+        # Update charts with the transactions list
+        self.charts.update_charts(self.transactions)
 
 if __name__ == "__main__":
     root = tk.Tk()
